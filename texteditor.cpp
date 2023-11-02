@@ -6,11 +6,14 @@ TextEditor::TextEditor(QWidget *parent)
 {
     m_timer = new QTimer(this);
     m_timer->setSingleShot(true);
+    m_worker = std::make_shared<Worker>();
 
     m_syntaxHighlighter = new SyntaxHighlighter(this, this);
 
     connect(this->document(), &QTextDocument::contentsChanged, this, &TextEditor::onTextChanged);
     connect(m_timer, &QTimer::timeout, this, &TextEditor::process);
+    connect(this, &TextEditor::updateNodes, m_worker.get(), &Worker::process);
+    connect(m_worker.get(), &Worker::finished, this, &TextEditor::handle);
 }
 
 TextEditor::~TextEditor()

@@ -1,6 +1,7 @@
 #ifndef TEXTEDITOR_H
 #define TEXTEDITOR_H
 
+#include "worker.h"
 #include "syntaxhighlighter.h"
 #include <QObject>
 #include <QPlainTextEdit>
@@ -19,13 +20,13 @@ signals:
 private slots:
     void onTextChanged();
 
-public slots:
     void process();
     void handle(Tree tree);
 
 private:
     SyntaxHighlighter *m_syntaxHighlighter = nullptr;
 
+    std::shared_ptr<Worker> m_worker;
     QTimer *m_timer = nullptr;
 };
 
