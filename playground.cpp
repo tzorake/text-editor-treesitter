@@ -10,11 +10,8 @@ Playground::Playground(QWidget *parent)
 
     m_timer = new QTimer(this);
     m_timer->setSingleShot(true);
-    m_worker = std::make_shared<Worker>();
 
     connect(m_timer, &QTimer::timeout, this, &Playground::process);
-    connect(this, &Playground::updateNodes, m_worker.get(), &Worker::process);
-    connect(m_worker.get(), &Worker::finished, this, &Playground::handle);
 }
 
 Playground::~Playground()

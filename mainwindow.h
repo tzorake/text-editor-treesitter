@@ -1,8 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "worker.h"
 #include <QMainWindow>
-#include <QSyntaxHighlighter>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -17,6 +17,8 @@ public:
     ~MainWindow();
 
 private:
+    Worker *m_worker;
+
     Ui::MainWindow *ui;
 
 protected:
