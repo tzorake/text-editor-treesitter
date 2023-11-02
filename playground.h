@@ -21,13 +21,13 @@ signals:
 private slots:
     void onTextChanged();
 
+public slots:
     void process();
     void handle(Tree tree);
 
 private:
     QPlainTextEdit *m_source = nullptr;
 
-    std::shared_ptr<Worker> m_worker;
     QTimer *m_timer = nullptr;
 };
 
