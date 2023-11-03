@@ -58,9 +58,9 @@ void Worker::cleanup()
     m_thread->quit();
 }
 
-TSNodeIterable Worker::iter_children(TSNode source)
+TSTreeIterator Worker::iter_children(TSNode source)
 {
-    return TSNodeIterable(source);
+    return TSTreeIterator(source);
 }
 
 Range Worker::node_range(TSNode source)
@@ -75,15 +75,14 @@ Range Worker::node_range(TSNode source)
 
 bool Worker::child_is_empty(Child child)
 {
-    return ts_node_is_null(child.first) && child.second == NULL;
+    return ts_node_is_null(child.first) && strcmp(child.second, "");
 }
 
 void Worker::traverse(TSNode node, uint32_t depth, Tree *tree)
 {
-    TSNodeIterable next = iter_children(node);
+    auto it = iter_children(node);
 
-    Child pair;
-    while (!child_is_empty(pair = next())) {
+    for (auto pair : it) {
         auto child = pair.first;
         auto field = pair.second;
         auto type = ts_node_type(child);
@@ -108,31 +107,50 @@ void Worker::traverse(TSNode node, uint32_t depth, Tree *tree)
     }
 }
 
-TSNodeIterable::TSNodeIterable(TSNode _source)
-    : source(_source)
-    , cursor(ts_tree_cursor_new(source))
+TSTreeIterator::Iterator::Iterator(TSNode source, Child current, TSTreeCursor *cursor)
+    : source(source)
+    , current(current)
+    , cursor(cursor)
 {
 
 }
 
-TSNodeIterable::~TSNodeIterable()
+TSTreeIterator::Iterator &TSTreeIterator::Iterator::operator++()
 {
-    ts_tree_cursor_delete(&cursor);
+    current = node_next_child(cursor, source);
+    return *this;
 }
 
-Child TSNodeIterable::operator()()
+TSTreeIterator::Iterator TSTreeIterator::Iterator::operator++(int)
 {
-    return (current = node_next_child(&cursor, source));
+    Iterator retval = *this;
+    ++(*this);
+    return retval;
 }
 
-Child TSNodeIterable::node_next_child(TSTreeCursor *cursor, TSNode source)
+bool TSTreeIterator::Iterator::operator==(TSTreeIterator::Iterator other) const
+{
+    return ts_node_eq(current.first, other.current.first) && !strcmp(current.second, other.current.second);
+}
+
+bool TSTreeIterator::Iterator::operator!=(TSTreeIterator::Iterator other) const
+{
+    return !(*this == other);
+}
+
+Child TSTreeIterator::Iterator::operator*() const
+{
+    return current;
+}
+
+Child TSTreeIterator::Iterator::node_next_child(TSTreeCursor *cursor, TSNode source)
 {
     if (!cursor) {
-        return { TSNode{}, NULL };
+        return { TSNode{}, "" };
     }
 
     if (ts_node_is_null(source)) {
-        return { TSNode{}, NULL };
+        return { TSNode{}, "" };
     }
 
     if (ts_node_eq(source, ts_tree_cursor_current_node(cursor))) {
@@ -148,9 +166,31 @@ Child TSNodeIterable::node_next_child(TSTreeCursor *cursor, TSNode source)
         auto node = ts_tree_cursor_current_node(cursor);
         const char *field = ts_tree_cursor_current_field_name(cursor);
 
-        return { node, field };
+        return { node, field != NULL ? field : "" };
     }
 
 end:
-    return { TSNode{}, NULL };
+    return { TSNode{}, "" };
+}
+
+TSTreeIterator::TSTreeIterator(TSNode source)
+    : source(source)
+    , cursor(ts_tree_cursor_new(source))
+{
+
+}
+
+TSTreeIterator::~TSTreeIterator()
+{
+    ts_tree_cursor_delete(&cursor);
+}
+
+TSTreeIterator::Iterator TSTreeIterator::begin()
+{
+    return Iterator(source, Iterator::node_next_child(&cursor, source), &cursor);
+}
+
+TSTreeIterator::Iterator TSTreeIterator::end()
+{
+    return Iterator(source, Child{ TSNode{}, "" }, &cursor);
 }
