@@ -31,9 +31,9 @@ void TextEditor::process()
     emit updateNodes(toPlainText());
 }
 
-void TextEditor::handle(Tree tree)
+void TextEditor::handle(EditorNodeDescriptionList list)
 {
     document()->blockSignals(true);
-    m_syntaxHighlighter->highlight(tree);
+    m_syntaxHighlighter->highlight(list);
     document()->blockSignals(false);
 }

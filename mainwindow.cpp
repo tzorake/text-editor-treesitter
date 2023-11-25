@@ -23,7 +23,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->playground->setSource(ui->textEdit);
 
     QString source;
-    FileReader::readFile(QApplication::applicationDirPath() + QDir::separator() + "script.js", source);
+    QString path = QDir::cleanPath(QApplication::applicationDirPath() + QDir::separator() + "script.js");
+    FileReader::readFile(path, source);
     ui->textEdit->setPlainText(source);
 
     m_worker = new Worker();
@@ -31,8 +32,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->textEdit, &TextEditor::updateNodes, m_worker, &Worker::process);
     connect(m_worker, &Worker::finished, ui->textEdit, &TextEditor::handle);
 
-    connect(ui->playground, &Playground::updateNodes, m_worker, &Worker::process);
-    connect(m_worker, &Worker::finished, ui->playground, &Playground::handle);
+//    connect(ui->playground, &Playground::updateNodes, m_worker, &Worker::process);
+//    connect(m_worker, &Worker::finished, ui->playground, &Playground::handle);
 }
 
 MainWindow::~MainWindow()

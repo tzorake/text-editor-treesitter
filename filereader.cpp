@@ -8,16 +8,17 @@ FileReader::FileReader(QObject *parent) : QObject(parent)
 
 }
 
-void FileReader::readFile(const QString &filename, QString &source)
+bool FileReader::readFile(const QString &filename, QString &source)
 {
     source = QString();
     QFile file(filename);
 
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Unable to open file";
-        return;
+        qWarning() << "Unable to open file:" << filename;
+        return false;
     }
 
     QTextStream in(&file);
     source = in.readAll();
+    return true;
 }

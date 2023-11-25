@@ -21,7 +21,7 @@ private slots:
 
 public slots:
     void process();
-    void handle(Tree tree);
+    void handle(EditorNodeDescriptionList list);
 
 private:
     SyntaxHighlighter *m_syntaxHighlighter = nullptr;

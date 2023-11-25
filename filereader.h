@@ -7,9 +7,10 @@ class FileReader : public QObject
 {
     Q_OBJECT
 public:
-    explicit FileReader(QObject *parent = nullptr);
+    static bool readFile(const QString &filename, QString &source);
 
-    static void readFile(const QString &filename, QString &source);
+private:
+    explicit FileReader(QObject *parent = nullptr);
 };
 
 #endif // FILEREADER_H

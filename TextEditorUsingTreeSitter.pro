@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++17
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -16,32 +16,36 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    filereader.cpp \
     main.cpp \
+    filereader.cpp \
     mainwindow.cpp \
     playground.cpp \
     syntaxhighlighter.cpp \
     texteditor.cpp \
+    treesitter.cpp \
     worker.cpp
 
 HEADERS += \
+    kvec.h \
     filereader.h \
     mainwindow.h \
     playground.h \
     syntaxhighlighter.h \
     texteditor.h \
-    worker.h \
-    workertypes.h
+    treesitter.h \
+    worker.h
 
 FORMS += \
     mainwindow.ui
 
 INCLUDEPATH += \
     $$PWD/tree-sitter/lib/include \
+    $$PWD/gnu_regex
 
 LIBS += \
     -L$$PWD/tree-sitter -ltree-sitter \
-    -L$$PWD/tree-sitter-javascript -ltree-sitter-javascript
+    -L$$PWD/tree-sitter-javascript -ltree-sitter-javascript \
+    -L$$PWD/gnu_regex/dist -lregex
 #    $$PWD/tree-sitter/tree-sitter.a \
 #    $$PWD/tree-sitter-javascript/tree-sitter-javascript.a
 

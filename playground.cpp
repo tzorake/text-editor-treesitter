@@ -58,11 +58,11 @@ void Playground::process()
     }
 }
 
-void Playground::handle(Tree tree)
+void Playground::handle(PlaygroundNodeDescriptionList list)
 {
     QString result;
 
-    for (auto node : qAsConst(tree)) {
+    for (auto node : qAsConst(list)) {
         auto type = node.type;
         auto named = node.named;
         auto field = node.field;
@@ -82,7 +82,7 @@ void Playground::handle(Tree tree)
         result = result % formatted;
     }
 
-    for (auto node : tree) {
+    for (auto node : list) {
         delete node.type;
         delete node.field;
     }

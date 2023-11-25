@@ -1,7 +1,7 @@
 #ifndef WORKER_H
 #define WORKER_H
 
-#include "workertypes.h"
+#include "treesitter.h"
 #include <QObject>
 #include <QDebug>
 #include <QThread>
@@ -13,37 +13,6 @@
 extern "C" {
     TSLanguage *tree_sitter_javascript();
 }
-
-class TSTreeIterator {
-public:
-    explicit TSTreeIterator(TSNode source);
-    ~TSTreeIterator();
-
-    class Iterator {
-    public:
-        explicit Iterator(TSNode source, Child current, TSTreeCursor *cursor);
-
-        Iterator &operator++();
-        Iterator operator++(int);
-        bool operator==(Iterator other) const;
-        bool operator!=(Iterator other) const;
-        Child operator*() const;
-
-        static Child node_next_child(TSTreeCursor *cursor, TSNode source);
-
-    private:
-        TSNode source;
-        Child current;
-        TSTreeCursor *cursor;
-    };
-
-    Iterator begin();
-    Iterator end();
-
-private:
-    TSNode source;
-    TSTreeCursor cursor;
-};
 
 class Worker : public QObject
 {
@@ -60,15 +29,17 @@ private slots:
 
 signals:
     void started();
-    void finished(Tree tree);
+    void finished(EditorNodeDescriptionList list);
 
 private:
-    TSTreeIterator iter_children(TSNode source);
-    Range node_range(TSNode source);
-    bool child_is_empty(Child child);
-    void traverse(TSNode node, uint32_t depth, Tree *tree);
+    EditorNodeDescriptionList editorNodeDescriptions(NodeTupleList list);
 
-    Tree m_tree;
+    Range node_range(Node *source);
+
+    void loadQueries();
+
+    QList<QString> m_queries;
+
     std::unique_ptr<QThread> m_thread;
 };
 
