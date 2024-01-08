@@ -1,8 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "worker.h"
 #include <QMainWindow>
+#include "worker.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,10 +18,6 @@ public:
 
 private:
     Worker *m_worker;
-
     Ui::MainWindow *ui;
-
-protected:
-    void keyPressEvent(QKeyEvent *event);
 };
 #endif // MAINWINDOW_H

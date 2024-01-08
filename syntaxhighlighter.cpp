@@ -2,43 +2,59 @@
 #include "filereader.h"
 #include <QTextDocument>
 #include <QTextBlock>
-#include <QDebug>
-#include <QApplication>
 #include <QRegularExpression>
 #include <QDir>
+#include <QApplication>
 #include <QJsonDocument>
-#include <QJsonArray>
 #include <QJsonObject>
+#include <QJsonArray>
 
-SyntaxHighlighter::SyntaxHighlighter(QPlainTextEdit *source, QWidget *parent)
+SyntaxHighlighter::SyntaxHighlighter(QPlainTextEdit *parent)
     : QObject(parent)
-    , m_source(source)
+    , m_source(parent)
 {
     loadFormats();
 }
 
-void SyntaxHighlighter::highlight(const EditorNodeDescriptionList &list)
+void SyntaxHighlighter::highlight(const NodeDescriptionList &nodes)
+{
+    m_nodes = nodes;
+    rehighlight();
+}
+
+void SyntaxHighlighter::rehighlight()
 {
     auto doc = m_source->document();
+    const QSignalBlocker blocker(doc);
+
     QTextCursor cursor(doc);
 
-    cursor.setPosition(0, QTextCursor::MoveAnchor);
-    cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
-    cursor.setCharFormat(QTextCharFormat());
+//    cursor.setPosition(0, QTextCursor::MoveAnchor);
+//    cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+//    cursor.setCharFormat(QTextCharFormat());
 
-    for (auto node : list) {
+    uint32_t rendered = 0;
+
+    for (auto node : m_nodes) {
         auto query_type = node.query_type;
         auto startRow = node.lnum;
         auto startCol = node.col;
         auto endRow = node.end_lnum;
         auto endCol = node.end_col;
 
-        int position = translatePosition(startRow, startCol);
+        auto startPosition = translatePosition(startRow, startCol);
+        auto endPosition = translatePosition(endRow, endCol);
+
+        if (!(withinViewport(m_source, startPosition) || withinViewport(m_source, endPosition))) {
+            continue;
+        }
+
+        auto position = translatePosition(startRow, startCol);
         cursor.setPosition(position, QTextCursor::MoveAnchor);
 
-        QTextCharFormat format = m_formats[query_type];
-        for (uint32_t row = startRow; row <= endRow; ++row) {
-            uint32_t endColForRow = (row == endRow) ? endCol : m_source->document()->findBlockByLineNumber(row).length() - 1;
+        auto format = m_formats[query_type];
+        for (auto row = startRow; row <= endRow; ++row) {
+            auto endColForRow = (row == endRow) ? endCol : m_source->document()->findBlockByLineNumber(row).length() - 1;
             cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, endColForRow - cursor.columnNumber());
             cursor.setCharFormat(format);
 
@@ -47,7 +63,32 @@ void SyntaxHighlighter::highlight(const EditorNodeDescriptionList &list)
                 cursor.movePosition(QTextCursor::StartOfLine);
             }
         }
+
+        ++rendered;
     }
+
+    qDebug() << rendered << m_nodes.size();
+}
+
+int SyntaxHighlighter::translatePosition(uint32_t row, uint32_t column, bool local)
+{
+    QTextCursor cursor(m_source->document());
+    cursor.movePosition(QTextCursor::Start);
+    cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, row);
+    cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, column);
+
+    return local ? cursor.positionInBlock() : cursor.position();
+}
+
+bool SyntaxHighlighter::withinViewport(const QPlainTextEdit *textEdit, int position)
+{
+    QTextCursor cursor(textEdit->document());
+    cursor.setPosition(position);
+
+    auto rect = textEdit->cursorRect(cursor);
+    auto viewport = textEdit->viewport()->rect();
+
+    return viewport.intersects(rect);
 }
 
 void SyntaxHighlighter::loadFormats()
@@ -92,26 +133,11 @@ void SyntaxHighlighter::loadFormats()
                 formats[key] = format;
             }
 
-            setFormats(formats);
+            m_formats = formats;
         } else {
-            qDebug() << "SyntaxHighlighter::loadFormats(): document is not an object!";
+            qWarning() << qPrintable(tr("SyntaxHighlighter::loadFormats(): document is not an object!"));
         }
     } else {
-        qDebug() << "SyntaxHighlighter::loadFormats(): invalid document!";
+        qWarning() << qPrintable(tr("SyntaxHighlighter::loadFormats(): invalid document!"));
     }
-}
-
-int SyntaxHighlighter::translatePosition(uint32_t row, uint32_t column, bool local)
-{
-    QTextCursor cursor(m_source->document());
-    cursor.movePosition(QTextCursor::Start);
-    cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, row);
-    cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor, column);
-
-    return local ? cursor.positionInBlock() : cursor.position();
-}
-
-void SyntaxHighlighter::setFormats(QMap<QString, QTextCharFormat> formats)
-{
-    m_formats = formats;
 }

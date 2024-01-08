@@ -14,7 +14,7 @@ bool FileReader::readFile(const QString &filename, QString &source)
     QFile file(filename);
 
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Unable to open file:" << filename;
+        qWarning() << qPrintable(tr("Unable to open file: %1").arg(filename));
         return false;
     }
 

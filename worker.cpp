@@ -1,106 +1,99 @@
 #include "worker.h"
 #include "filereader.h"
-#include <string>
-#include <QStringBuilder>
-#include <QTimer>
-#include <QApplication>
+#include "treesitter.h"
 #include <QRegularExpression>
 #include <QDir>
+#include <QApplication>
 #include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
 
-Worker::Worker(QObject *parent) : QObject(parent)
+extern "C" {
+    TSLanguage *tree_sitter_javascript();
+}
+
+Worker::Worker(QObject *parent)
+    : QObject(parent)
 {
     loadQueries();
 
     m_thread.reset(new QThread);
+    m_state.reset(new State);
     moveToThread(m_thread.get());
     m_thread->start();
 }
 
 Worker::~Worker()
 {
-    QMetaObject::invokeMethod(this, "cleanup");
+    QMetaObject::invokeMethod(this, &Worker::cleanup);
     m_thread->wait();
 }
 
-void Worker::process(QString text)
+void Worker::process(const QString &text)
 {
-    auto parser = ts_parser_new();
-    auto lang = tree_sitter_javascript();
-    ts_parser_set_language(parser, lang);
+    if (m_parser == nullptr) {
+        m_parser = ts_parser_new();
+    }
+
+    if (m_language == nullptr) {
+        m_language = tree_sitter_javascript();
+    }
+
+    if (m_parser != nullptr && m_language != nullptr) {
+        ts_parser_set_language(m_parser, m_language);
+    }
+
+    m_result.clear();
+    m_state->dealloc();
 
     auto string = text.toUtf8();
     auto source_code = string.constData();
-    auto tree = ts_parser_parse_string(
-        parser,
+    auto new_tree = ts_parser_parse_string(
+        m_parser,
         NULL,
         source_code,
         strlen(source_code)
     );
+    auto root = ts_tree_root_node(new_tree);
 
-    auto root = ts_tree_root_node(tree);
-    EditorNodeDescriptionList list;
+    auto language = Language::create(m_state.get(), m_language);
+    auto tree_object = Tree::create(m_state.get(), new_tree, source_code, true);
+    auto root_node = Node::create(m_state.get(), root, tree_object);
 
     for (const auto &query : m_queries) {
-        auto string = query.toStdString();
-        auto c_str = string.c_str();
+        auto string = query.toUtf8();
+        auto c_str = string.constData();
 
-        auto parser = ts_parser_new();
-        auto javascript = tree_sitter_javascript();
-        ts_parser_set_language(parser, javascript);
-
-        char *query_source = new char[strlen(c_str) + 1];
+        auto query_source = (char *)m_state->allocate(strlen(c_str) + 1);
         memcpy(query_source, c_str, strlen(c_str) + 1);
 
-        auto language = new Language(javascript);
-        auto language_query = language->language_query(
+        auto language_query = language->query(
             query_source,
-            strlen(c_str)
+            strlen(query_source)
         );
         auto query_cursor = ts_query_cursor_new();
-        auto tree_object = new Tree(tree, source_code, true);
-        auto root_node = new Node(root, tree_object);
 
         auto captures = language_query->captures(query_cursor, root_node);
-        auto descriptions = editorNodeDescriptions(captures);
+        auto descs = descriptions(captures);
 
-        list.append(descriptions);
+        m_result.append(descs);
     }
 
-    ts_tree_delete(tree);
-    ts_parser_delete(parser);
+    ts_tree_delete(new_tree);
 
-    emit finished(list);
+    emit finished(m_result);
+}
+
+NodeDescriptionList Worker::result()
+{
+    return m_result;
 }
 
 void Worker::cleanup()
 {
+    if (m_parser) {
+        ts_parser_delete(m_parser);
+    }
+
     m_thread->quit();
-}
-
-EditorNodeDescriptionList Worker::editorNodeDescriptions(NodeTupleList list)
-{
-    EditorNodeDescriptionList nodes;
-
-    std::transform(list.begin(), list.end(), std::back_inserter(nodes), [this](const NodeTuple &tuple) {
-        auto node = tuple.first;
-        auto query_type = tuple.second;
-        auto range = node_range(node);
-        uint32_t lnum = range.lnum, col = range.col, end_lnum = range.end_lnum, end_col = range.end_col;
-
-        return EditorNodeDescription{
-            .id = node->node.id,
-            .query_type = query_type,
-            .lnum = lnum,
-            .col = col,
-            .end_lnum = end_lnum,
-            .end_col = end_col,
-        };
-    });
-
-    return nodes;
 }
 
 Range Worker::node_range(Node *source)
@@ -111,6 +104,28 @@ Range Worker::node_range(Node *source)
     return Range{
         start.row, start.column, end.row, end.column
     };
+}
+
+NodeDescriptionList Worker::descriptions(const NodeTupleList &list)
+{
+    NodeDescriptionList nodes;
+
+    std::transform(list.begin(), list.end(), std::back_inserter(nodes), [this](const NodeTuple &tuple) {
+        auto query_type = tuple.second;
+        auto node = tuple.first;
+        auto range = node_range(node);
+        uint32_t lnum = range.lnum, col = range.col, end_lnum = range.end_lnum, end_col = range.end_col;
+
+        return NodeDescription{
+            .query_type = query_type,
+            .lnum = lnum,
+            .col = col,
+            .end_lnum = end_lnum,
+            .end_col = end_col,
+        };
+    });
+
+    return nodes;
 }
 
 void Worker::loadQueries()
@@ -128,9 +143,10 @@ void Worker::loadQueries()
         if(document.isArray()) {
             m_queries = document.toVariant().toStringList();
         } else {
-            qDebug() << "SyntaxHighlighter::loadQueries(): document is not an array!";
+            qWarning() << qPrintable(tr("SyntaxHighlighter::loadQueries(): document is not an array!"));
         }
     } else {
-        qDebug() << "SyntaxHighlighter::loadQueries(): invalid document!";
+        qWarning() << qPrintable(tr("SyntaxHighlighter::loadQueries(): invalid document!"));
     }
 }
+

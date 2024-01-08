@@ -1,18 +1,12 @@
 #ifndef WORKER_H
 #define WORKER_H
 
-#include "treesitter.h"
 #include <QObject>
-#include <QDebug>
 #include <QThread>
-#include <QTextEdit>
-#include <QPair>
-#include <QStack>
 #include <memory>
+#include "treesitter.h"
 
-extern "C" {
-    TSLanguage *tree_sitter_javascript();
-}
+// https://github.com/tsoding/arena
 
 class Worker : public QObject
 {
@@ -22,24 +16,29 @@ public:
     ~Worker();
 
 public slots:
-    void process(QString text);
+    void process(const QString &text);
+    NodeDescriptionList result();
 
 private slots:
     void cleanup();
 
 signals:
     void started();
-    void finished(EditorNodeDescriptionList list);
+    void finished(const NodeDescriptionList &result);
 
 private:
-    EditorNodeDescriptionList editorNodeDescriptions(NodeTupleList list);
-
     Range node_range(Node *source);
 
-    void loadQueries();
+    NodeDescriptionList descriptions(const NodeTupleList &list);
+    NodeDescriptionList m_result;
 
+    void loadQueries();
     QList<QString> m_queries;
 
+    TSParser *m_parser = nullptr;
+    TSLanguage *m_language = nullptr;
+
+    std::unique_ptr<State> m_state;
     std::unique_ptr<QThread> m_thread;
 };
 
