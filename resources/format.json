@@ -1,0 +1,117 @@
+// https://github.com/nvim-treesitter/nvim-treesitter/wiki/Colorschemes
+{
+  "constant": {
+    "background-color": "#00000000",
+    "color": "#ff4078f2",
+    "italic": false,
+    "bold": false
+  },
+  "constructor": {
+    "background-color": "#00000000",
+    "color": "#ff0184bc",
+    "italic": false,
+    "bold": false
+  },
+  "variable.builtin": {
+    "background-color": "#00000000",
+    "color": "#ff61afef",
+    "italic": false,
+    "bold": false
+  },
+  "function.builtin": {
+    "background-color": "#00000000",
+    "color": "#ff4078f2",
+    "italic": false,
+    "bold": false
+  },
+  "function": {
+    "background-color": "#00000000",
+    "color": "#ff4078f2",
+    "italic": false,
+    "bold": false
+  },
+  "function.method": {
+    "background-color": "#00000000",
+    "color": "#ff4078f2",
+    "italic": false,
+    "bold": false
+  },
+  "variable": {
+    "background-color": "#00000000",
+    "color": "#ff494b53",
+    "italic": false,
+    "bold": false
+  },
+  "property": {
+    "background-color": "#00000000",
+    "color": "#ff61afef",
+    "italic": false,
+    "bold": false
+  },
+  "constant.builtin": {
+    "background-color": "#00000000",
+    "color": "#ff986801",
+    "italic": false,
+    "bold": false
+  },
+  "comment" : {
+    "background-color": "#00000000",
+    "color": "#ffa0a1a7",
+    "italic": true,
+    "bold": false
+  },
+  "string": {
+    "background-color": "#00000000",
+    "color": "#ff50a14f",
+    "italic": false,
+    "bold": false
+  },
+  "string.special": {
+    "background-color": "#00000000",
+    "color": "#ff50a14f",
+    "italic": false,
+    "bold": false
+  },
+  "number": {
+    "background-color": "#00000000",
+    "color": "#ff986801",
+    "italic": false,
+    "bold": false
+  },
+  "punctuation.special": {
+    "background-color": "#00000000",
+    "color": "#ff494b53",
+    "italic": false,
+    "bold": false
+  },
+  "embedded": {
+    "background-color": "#00000000",
+    "color": "#ff494b53",
+    "italic": false,
+    "bold": false
+  },
+  "punctuation.delimiter": {
+    "background-color": "#00000000",
+    "color": "#ff494b53",
+    "italic": false,
+    "bold": false
+  },
+  "operator": {
+    "background-color": "#00000000",
+    "color": "#ff494b53",
+    "italic": false,
+    "bold": false
+  },
+  "punctuation.bracket": {
+    "background-color": "#00000000",
+    "color": "#ff494b53",
+    "italic": false,
+    "bold": false
+  },
+  "keyword": {
+    "background-color": "#00000000",
+    "color": "#ffe88388",
+    "italic": false,
+    "bold": false
+  }
+}
