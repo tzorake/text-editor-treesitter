@@ -96,7 +96,7 @@ void SyntaxHighlighter::loadFormats()
     QRegularExpression comment("//.*");
 
     QString source;
-    QString path = QDir::cleanPath(QApplication::applicationDirPath() + QDir::separator() + "format.json");
+    QString path = QDir::cleanPath(QApplication::applicationDirPath() + QDir::separator() + "resources" + QDir::separator() + "format.json");
     FileReader::readFile(path, source);
 
     source.replace(comment, "");

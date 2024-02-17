@@ -38,14 +38,32 @@ FORMS += \
     mainwindow.ui
 
 INCLUDEPATH += \
-    $$PWD/tree-sitter/lib/include \
-    $$PWD/gnu_regex/lib/include
+    $${PWD}/tree-sitter/lib/include
 
 LIBS += \
-    -L$$PWD/tree-sitter -ltree-sitter \
-    -L$$PWD/tree-sitter-javascript -ltree-sitter-javascript
+    -L$${PWD}/tree-sitter -ltree-sitter \
+    -L$${PWD}/tree-sitter-javascript -ltree-sitter-javascript
+
+CONFIG(debug, debug|release) {
+    DESTDIR = $${OUT_PWD}/debug
+} else {
+    DESTDIR = $${OUT_PWD}/release
+}
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+# Copy resources
+# https://stackoverflow.com/questions/19066593/copy-a-file-to-build-directory-after-compiling-project-with-qt
+dummy.commands = @echo After build copying is finieshed!
+QMAKE_EXTRA_TARGETS += dummy
+PRE_TARGETDEPS += dummy
+
+IN_DIR = $$shell_quote($$shell_path($$PWD/resources))
+OUT_DIR = $$shell_quote($$shell_path($$DESTDIR)/resources)
+
+tools.commands = $(COPY_DIR) $$IN_DIR $$OUT_DIR
+dummy.depends += tools
+QMAKE_EXTRA_TARGETS += tools

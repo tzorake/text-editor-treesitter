@@ -133,7 +133,7 @@ void Worker::loadQueries()
     QRegularExpression comment("//.*");
 
     QString source;
-    QString path = QDir::cleanPath(QApplication::applicationDirPath() + QDir::separator() + "queries.json");
+    QString path = QDir::cleanPath(QApplication::applicationDirPath() + QDir::separator() + "resources" + QDir::separator() + "queries.json");
     FileReader::readFile(path, source);
 
     source = source.replace(comment, "");

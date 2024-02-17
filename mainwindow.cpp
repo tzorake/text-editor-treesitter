@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->plainTextEdit->setFont(font);
 
     QString source;
-    QString path = QDir::cleanPath(QApplication::applicationDirPath() + QDir::separator() + "script.js");
+    QString path = QDir::cleanPath(QApplication::applicationDirPath() + QDir::separator() + "resources" + QDir::separator() + "script.js");
     FileReader::readFile(path, source);
     ui->plainTextEdit->setPlainText(source);
 
@@ -30,4 +30,3 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-
