@@ -61,9 +61,12 @@ dummy.commands = @echo After build copying is finieshed!
 QMAKE_EXTRA_TARGETS += dummy
 PRE_TARGETDEPS += dummy
 
-IN_DIR = $$shell_quote($$shell_path($$PWD/resources))
-OUT_DIR = $$shell_quote($$shell_path($$DESTDIR)/resources)
+build_libs.commands = cd $$shell_quote($$shell_path($$PWD)) && call $$shell_quote($$shell_path($$PWD/build.bat))
+dummy.depends += build_libs
 
-tools.commands = $(COPY_DIR) $$IN_DIR $$OUT_DIR
-dummy.depends += tools
-QMAKE_EXTRA_TARGETS += tools
+IN_DIR = $$shell_quote($$shell_path($$PWD/resources))
+OUT_DIR = $$shell_quote($$shell_path($$DESTDIR/resources))
+copy_files.commands = $(COPY_DIR) $$IN_DIR $$OUT_DIR
+dummy.depends += copy_files
+
+QMAKE_EXTRA_TARGETS += build_libs copy_files
